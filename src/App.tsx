@@ -432,6 +432,37 @@ export default function App() {
     }
   };
 
+  const formatFullSceneData = (scene: ScenePrompt) => {
+    return `Script Line (${selectedLanguage})
+"${scene.scriptLine}"
+
+Character Description
+${scene.characterDescription}
+
+Expression & Micro-Movement
+${scene.expression}
+
+Body Language
+${scene.bodyLanguage}
+
+Camera
+${scene.camera}
+
+Audio
+${scene.audio}
+
+Environment
+${scene.environment}
+
+Voice Direction
+Pace
+${scene.voiceDirection.pace}
+Tone
+${scene.voiceDirection.tone}
+Delivery
+"${scene.voiceDirection.delivery}"`;
+  };
+
   const handleGenerateScenes = async () => {
     setLoading(true);
     setError(null);
@@ -1439,7 +1470,7 @@ export default function App() {
                         onClick={() => {
                           const allPrompts = scenes
                             .filter(s => s.selected)
-                            .map(s => `Scene ${s.sceneNumber}:\nPrompt: ${s.imagePrompt}\nScript: ${s.scriptLine}\n---`)
+                            .map(s => `Scene ${s.sceneNumber}:\n${formatFullSceneData(s)}\n---`)
                             .join('\n\n');
                           copyToClipboard(allPrompts, 'all-scenes');
                         }}
@@ -1474,7 +1505,7 @@ export default function App() {
                           </div>
                           <div className="flex items-center gap-6">
                             <button 
-                              onClick={() => copyToClipboard(scene.imagePrompt, `scene-top-${idx}`)}
+                              onClick={() => copyToClipboard(formatFullSceneData(scene), `scene-top-${idx}`)}
                               className={`flex items-center gap-2 px-4 py-2 border transition-all font-mono text-[10px] uppercase tracking-widest ${
                                 copied === `scene-top-${idx}` 
                                   ? 'bg-green-50 border-green-200 text-green-700' 
