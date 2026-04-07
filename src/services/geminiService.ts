@@ -11,7 +11,7 @@ import {
   MultiAnglePrompts
 } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.VITE_GEMINI_API_KEY || "" });
+const ai = new GoogleGenAI({ apiKey: (import.meta as any).env.VITE_GEMINI_API_KEY || "" });
 const modelPro = "gemini-3.1-pro-preview";
 const modelFlash = "gemini-3-flash-preview";
 const modelTTS = "gemini-2.5-flash-preview-tts";
