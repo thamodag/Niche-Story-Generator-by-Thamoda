@@ -34,6 +34,14 @@ import {
   Settings
 } from 'lucide-react';
 import { 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged, 
+  createUserWithEmailAndPassword,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { auth } from './firebase';
+import { 
   fetchViralNews, 
   fetchHistoricMedicine, 
   fetchFolklore,
@@ -95,9 +103,11 @@ const NICHES: Niche[] = [
 ];
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loginError, setLoginError] = useState('');
 
   const [currentStep, setCurrentStep] = useState<Step>('selection');
@@ -161,36 +171,59 @@ export default function App() {
     }
   }, [isDarkMode]);
 
-  // Check for existing session
+  // Check for existing session and handle auth state
   useEffect(() => {
-    const session = localStorage.getItem('app_session');
-    if (session === 'active') {
-      setIsAuthenticated(true);
-    }
-    
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsAuthReady(true);
+    });
+
     const savedTheme = localStorage.getItem('app_theme');
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
     }
+
+    return () => unsubscribe();
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const envUser = (process.env as any).VITE_APP_USERNAME || 'admin';
-    const envPass = (process.env as any).VITE_APP_PASSWORD || 'password';
+    setLoginError('');
+    setLoading(true);
 
-    if (loginForm.username === envUser && loginForm.password === envPass) {
-      setIsAuthenticated(true);
-      localStorage.setItem('app_session', 'active');
+    try {
+      await signInWithEmailAndPassword(auth, loginForm.email, loginForm.password);
       setLoginError('');
-    } else {
-      setLoginError('Invalid username or password');
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setLoginError(err.message || 'Failed to login. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('app_session');
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    setLoading(true);
+
+    try {
+      await createUserWithEmailAndPassword(auth, loginForm.email, loginForm.password);
+      setLoginError('');
+    } catch (err: any) {
+      console.error("Sign up error:", err);
+      setLoginError(err.message || 'Failed to create account.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
   };
 
   const toggleTheme = () => {
@@ -476,9 +509,17 @@ export default function App() {
     </div>
   );
 
+  if (!isAuthReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-paper">
+        <Loader2 className="animate-spin text-ink" size={48} />
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen bg-paper text-ink font-sans selection:bg-ink selection:text-paper transition-colors duration-500 ${isDarkMode ? 'dark' : ''}`}>
-      {!isAuthenticated ? (
+      {!user ? (
         <div className="min-h-screen flex items-center justify-center p-6">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -491,19 +532,19 @@ export default function App() {
               <div className="w-16 h-16 bg-ink text-paper rounded-full flex items-center justify-center mx-auto mb-6">
                 <Lock size={32} />
               </div>
-              <h1 className="text-4xl font-black tracking-tighter uppercase">Secure Access</h1>
+              <h1 className="text-4xl font-black tracking-tighter uppercase">{isSignUp ? 'Create Account' : 'Secure Access'}</h1>
               <p className="micro-label !opacity-100">Niche Story Generator by Thamoda</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-8">
+            <form onSubmit={isSignUp ? handleSignUp : handleLogin} className="space-y-8">
               <div className="space-y-4">
-                <label className="micro-label">Username</label>
+                <label className="micro-label">Email Address</label>
                 <input 
-                  type="text" 
-                  value={loginForm.username}
-                  onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
+                  type="email" 
+                  value={loginForm.email}
+                  onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
                   className="w-full p-4 bg-ink/5 border border-ink/10 font-mono text-sm focus:outline-none focus:border-ink transition-all dark:bg-white/5"
-                  placeholder="Enter username"
+                  placeholder="Enter email"
                   required
                 />
               </div>
@@ -523,17 +564,24 @@ export default function App() {
                 <p className="text-red-600 font-mono text-[10px] uppercase tracking-widest text-center">{loginError}</p>
               )}
 
-              <div className="text-center">
-                <p className="text-[10px] font-mono uppercase tracking-widest opacity-30">Hint: admin / password</p>
-              </div>
-
               <button 
                 type="submit"
-                className="w-full py-6 bg-ink text-paper font-mono text-xs uppercase tracking-[0.4em] font-black hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl flex items-center justify-center gap-4"
+                disabled={loading}
+                className="w-full py-6 bg-ink text-paper font-mono text-xs uppercase tracking-[0.4em] font-black hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl flex items-center justify-center gap-4 disabled:opacity-50"
               >
-                Login <LogIn size={18} />
+                {loading ? <Loader2 className="animate-spin" size={18} /> : (isSignUp ? 'Sign Up' : 'Login')} 
+                {!loading && (isSignUp ? <LogIn size={18} /> : <LogIn size={18} />)}
               </button>
             </form>
+
+            <div className="text-center">
+              <button 
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-[10px] font-mono uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity"
+              >
+                {isSignUp ? 'Already have an account? Login' : "Don't have an account? Sign Up"}
+              </button>
+            </div>
 
             <div className="pt-8 border-t border-ink/5 flex justify-center">
               <button 
