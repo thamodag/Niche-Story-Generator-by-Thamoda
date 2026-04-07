@@ -1,0 +1,12 @@
+node_modules/@protobufjs/fetch/tests/index.js:3:var fetch = require("..");
+node_modules/formdata-polyfill/FormData.js:18:  const _fetch = global.Request && global.fetch
+node_modules/formdata-polyfill/FormData.js:421:    global.fetch = function (input, init) {
+node_modules/gaxios/build/cjs/src/gaxios.js:60:     * const myFetch: typeof fetch = (...args) => gaxios.fetch(...args);
+node_modules/gaxios/build/esm/src/gaxios.js:54:     * const myFetch: typeof fetch = (...args) => gaxios.fetch(...args);
+node_modules/google-auth-library/build/src/auth/authclient.js:91:     * const fetchWithAuthClient: typeof fetch = (...args) => authClient.fetch(...args);
+node_modules/google-auth-library/build/src/auth/googleauth.js:821:     * const fetchWithAuth: typeof fetch = (...args) => auth.fetch(...args);
+node_modules/protobufjs/src/root.js:86:Root.prototype.fetch = util.fetch;
+node_modules/protobufjs/dist/light/protobuf.js:4608:Root.prototype.fetch = util.fetch;
+node_modules/protobufjs/dist/protobuf.js:5994:Root.prototype.fetch = util.fetch;
+node_modules/.vite/deps/@google_genai.js:15354:  throw new Error("`fetch` is not defined as a global; Either pass `fetch` to the client, `new GeminiNextGenAPIClient({ fetch })` or polyfill the global, `globalThis.fetch = fetch`");
+node_modules/.vite/deps/@google_genai.js:16297:    this.fetch = (_j = options.fetch) !== null && _j !== void 0 ? _j : getDefaultFetch();

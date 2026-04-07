@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-paper: #F5F2ED;
+  --color-ink: #1A1A1A;
+  --color-accent: #D4A373; /* Warm gold/tan */
+}
+
+@layer base {
+  body {
+    @apply antialiased bg-paper text-ink transition-colors duration-300;
+  }
+  
+  .dark body {
+    --color-paper: #121212;
+    --color-ink: #F5F2ED;
+    @apply bg-paper text-ink;
+  }
+  
+  h1, h2, h3 {
+    @apply font-serif tracking-tight;
+  }
+}
+
+.glass {
+  @apply bg-white/40 backdrop-blur-md border border-white/20;
+}
+
+.dark .glass {
+  @apply bg-black/40 border-white/10;
+}
+
+.editorial-card {
+  @apply bg-white border border-ink/5 shadow-sm transition-all hover:shadow-xl hover:-translate-y-1;
+}
+
+.dark .editorial-card {
+  @apply bg-zinc-900 border-white/5;
+}
+
+.micro-label {
+  @apply font-mono text-[10px] uppercase tracking-[0.2em] opacity-50;
+}
+
+.serif-italic {
+  @apply font-serif italic;
+}
